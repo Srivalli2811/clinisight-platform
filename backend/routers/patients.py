@@ -159,3 +159,57 @@ def create_patient(patient: PatientCreate):
     finally:
         connection.close()
 
+
+class AdmitPatientRequest(BaseModel):
+    full_name: str
+    dob: str
+    gender: str
+    phone: str
+    doctor_id: int
+    room_number: str
+
+@router.post("/admit")
+def admit_patient(admission: AdmitPatientRequest):
+    """
+    Admits a new patient using the AdmitPatient stored procedure.
+    This performs, as one atomic transaction:
+    1. Insert patient
+    2. Insert appointment
+    3. Assign room (only if room is free)
+    4. Create initial bill
+    All four succeed together, or all are rolled back together.
+    """
+    connection = get_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.callproc("AdmitPatient", (
+                admission.full_name,
+                admission.dob,
+                admission.gender,
+                admission.phone,
+                admission.doctor_id,
+                admission.room_number
+            ))
+            connection.commit()
+            results = cursor.fetchall()
+            if not results:
+                raise HTTPException(
+                    status_code=500,
+                    detail="Admission failed — no confirmation returned from procedure"
+                )
+
+        return {
+            "status": "success",
+            "data": results[0]
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        connection.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Admission failed: {str(e)}"
+        )
+    finally:
+        connection.close()
