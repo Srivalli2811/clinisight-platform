@@ -4,7 +4,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import patients, analytics, departments,doctors,appointments
+from routers import patients, analytics, departments,doctors,appointments,auth
 from database import get_connection
 
 app = FastAPI(
@@ -21,6 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router)
 app.include_router(patients.router)
 app.include_router(analytics.router)
 app.include_router(departments.router)
