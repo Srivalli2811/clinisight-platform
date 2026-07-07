@@ -1,9 +1,11 @@
-from fastapi import APIRouter,HTTPException
+from fastapi import APIRouter,HTTPException, Depends
 from database import get_connection
+from dependencies import get_current_user
 
 router = APIRouter(
     prefix="/departments",
-    tags=["Departments"]
+    tags=["Departments"],
+    dependencies=[Depends(get_current_user)]
 )
 
 @router.get("/")

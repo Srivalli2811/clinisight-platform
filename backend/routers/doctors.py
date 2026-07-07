@@ -1,11 +1,13 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
 from database import get_connection
+from dependencies import get_current_user, require_admin
 
 router = APIRouter(
     prefix="/doctors",
-    tags=["Doctors"]
+    tags=["Doctors"],
+    dependencies=[Depends(get_current_user)]
 )
 
 class DoctorCreate(BaseModel):
@@ -99,7 +101,10 @@ def get_doctor(doctor_id: int):
 
 
 @router.post("/")
-def create_doctor(doctor: DoctorCreate):
+def create_doctor(
+    doctor: DoctorCreate,
+    current_user: dict = Depends(require_admin)
+):
     connection = get_connection()
     try:
         with connection.cursor() as cursor:

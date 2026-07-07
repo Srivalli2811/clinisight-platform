@@ -1,11 +1,13 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
 from database import get_connection
+from dependencies import get_current_user
 
 router = APIRouter(
     prefix="/appointments",
-    tags=["Appointments"]
+    tags=["Appointments"],
+    dependencies=[Depends(get_current_user)]
 )
 
 class AppointmentCreate(BaseModel):

@@ -1,12 +1,14 @@
 # routers/analytics.py
 # All analytics endpoints for CliniSight API
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from database import get_connection
+from dependencies import get_current_user
 
 router = APIRouter(
     prefix="/analytics",
-    tags=["Analytics"]
+    tags=["Analytics"],
+    dependencies=[Depends(get_current_user)]
 )
 
 @router.get("/overview")
