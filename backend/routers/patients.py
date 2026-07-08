@@ -7,6 +7,9 @@ from typing import Optional
 from database import get_connection
 from dependencies import get_current_user
 from cache import delete_from_cache
+from sqlalchemy.orm import Session
+from database import get_db
+from models.patient import Patient
 
 router = APIRouter(
     prefix="/patients",
@@ -68,6 +71,42 @@ def get_all_patients(
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     finally:
         connection.close()
+
+@router.get("/orm")
+def get_all_patients_orm(
+    gender: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Returns patients using SQLAlchemy ORM.
+    Demonstrates ORM filtering alongside existing raw SQL endpoint.
+    """
+    query = db.query(Patient)
+
+    if gender is not None:
+        query = query.filter(Patient.gender == gender)
+
+    patients = query.order_by(Patient.registered_at.desc()).all()
+
+    result = []
+
+    for p in patients:
+        result.append({
+            "patient_id": p.patient_id,
+            "full_name": p.full_name,
+            "gender": p.gender,
+            "dob": str(p.dob) if p.dob else None,
+            "phone": p.phone,
+            "email": p.email,
+            "registered_at": str(p.registered_at) if p.registered_at else None
+        })
+
+    return {
+        "status": "success",
+        "total": len(result),
+        "data": result,
+        "source": "sqlalchemy_orm"
+    }
 
 
 @router.get("/{patient_id}")
@@ -218,3 +257,4 @@ def admit_patient(admission: AdmitPatientRequest):
         )
     finally:
         connection.close()
+

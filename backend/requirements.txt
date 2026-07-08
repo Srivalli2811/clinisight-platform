@@ -4,3 +4,4 @@ pymysql==1.1.1
 python-dotenv==1.0.1
 pydantic==2.7.0
 redis==5.0.1
+sqlalchemy==2.0.51
