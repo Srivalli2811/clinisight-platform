@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from typing import Optional
 from database import get_connection
 from dependencies import get_current_user
+from cache import delete_from_cache
 
 router = APIRouter(
     prefix="/patients",
@@ -33,6 +34,7 @@ def get_all_patients(
     Example: GET /patients/?gender=Female&search=Amy
     """
     connection = get_connection()
+    
     try:
         with connection.cursor() as cursor:
             query = """
@@ -193,6 +195,7 @@ def admit_patient(admission: AdmitPatientRequest):
                 admission.room_number
             ))
             connection.commit()
+            delete_from_cache("analytics:overview")
             results = cursor.fetchall()
             if not results:
                 raise HTTPException(

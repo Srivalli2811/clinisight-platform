@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import patients, analytics, departments,doctors,appointments,auth
 from database import get_connection
+from cache import is_redis_available
 
 app = FastAPI(
     title="CliniSight API",
@@ -56,3 +57,12 @@ def test_database():
     finally:
         connection.close()
 
+@app.get("/test-redis")
+def test_redis():
+    """Temporary dev endpoint to verify Redis connection."""
+    available = is_redis_available()
+
+    return {
+        "redis_connected": available,
+        "message": "Redis is running" if available else "Redis not reachable"
+    }
